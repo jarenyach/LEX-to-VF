@@ -1,0 +1,134 @@
+<apex:page id="Giphy" controller="GiphyController">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"/>
+
+    <apex:slds />
+    <div class="slds-form-element">
+        <label class="slds-form-element__label" for="lcMessages">Messages Received from Lightning Component to VF:</label>
+        <div class="slds-form-element__control">
+            <textarea class="slds-textarea" id="lcMessages"></textarea>
+        </div>
+    </div>
+
+    <script>
+
+        //This shouldn't be hard coded
+        var apiKey = '4QeH1KiI80T1VoeuBdcDapXhiAnfT2bF'
+
+        //Gets set from lightning cmp.
+        var resultLimit;
+
+        //Needed to communicate with Lighting cmp;
+        var lexOrigin ='';
+
+        var vf = Visualforce.remoting.Manager;
+
+        $(document).ready(function(){
+            requestLightningUrl()
+                .then(res => {
+                    lexOrigin = res;
+                    window.addEventListener('message', processMessageFromLex, false);
+                    postMessageToLex(null, 'getResultLimit');
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        });
+
+        function requestLightningUrl() {
+            return new Promise((resolve, reject) => {
+                let isLightningOut = {!IF(isLightningOut, 'true', 'false')};
+
+                if(!isLightningOut){
+                    vf.invokeAction(
+                        '{!$RemoteAction.GiphyController.getLightningUrl}',
+                        (msg, event) => {
+                            resolve(msg);
+                        }
+                    );
+                }else{
+                    resolve('{!JSENCODE(HTMLENCODE(baseUrl))}');
+                }
+            });
+        }
+
+        function processMessageFromLex(event) {
+            if (event.origin !== lexOrigin) { return; }
+
+            switch (event.data.command) {
+                case 'search':
+                    search(event.data.searchTerms);
+                    setLcMessages('search:',event.data.searchTerms)
+                    break;
+                case 'setResultLimit':
+                    if(event.data.maxResults){
+                        if(isNaN(event.data.maxResults)){
+                            resultLimit = 0
+                        }else{
+                            resultLimit = event.data.maxResults;
+                        }
+                    } else{
+                        resultLimit = 0;
+                    }
+                    setLcMessages('setResultLimit:',event.data.maxResults);
+                    break;
+                default:
+                    alert(event.data.command + ' not set up.');
+            }
+        }
+
+        function search(searchTerms){
+            var message;
+            searchGiphy(searchTerms)
+                .then(res => {
+                    message = {giphy:{}};
+                    message.giphy = res;
+                    postMessageToLex(message, 'apiSucess');
+                })
+                .catch(err => {
+                    message = {error:{}};
+                    message.error = err;
+                    postMessageToLex(message, 'apiFailure');
+                });
+        }
+
+
+        function searchGiphy(searchTerms) {
+            return new Promise((resolve, reject) => {
+                $.getJSON("https://api.giphy.com/v1/gifs/search?api_key=" + apiKey + "&q=" + searchTerms + "&limit="+resultLimit+"&offset=0&rating=G&lang=en", function (results) {
+
+                    if(results.meta.status == 200){
+                        resolve(results);
+                    } else{
+                        reject(results)
+                    }
+                })
+                .fail(function( jqxhr, textStatus, error ) {
+                    var err = 'Request to Giphy Failed :('
+                    reject(err)
+                })
+            });
+        }
+
+        function postMessageToLex(message, messageType) {
+            if(!message){
+                message = {};
+            }
+            message.messageType = messageType;
+            //Check if we have the lexOrign.  If we don't go and get it.
+            if(lexOrigin === ''){
+                requestLightningUrl()
+                    .then(res => {
+                        lexOrigin = res;
+                        parent.postMessage(message, lexOrigin);
+                    })
+            } else{
+                parent.postMessage(message, lexOrigin);
+            }
+        }
+
+        function setLcMessages(type,obj){
+            $('[id$=lcMessages]').val(type+obj);
+        }
+
+    </script>
+</apex:page>

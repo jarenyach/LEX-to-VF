@@ -1,0 +1,61 @@
+<aura:component description="Giphy" implements="flexipage:availableForAllPageTypes,force:appHostable,force:hasRecordId" access="global" controller="GiphyController">
+    <!-- Attributes -->
+    <aura:attribute name="vfOrigin" type="String"/>
+    <aura:attribute name="giphyVFUrl" type="String"/>
+    <aura:attribute name="isLightningOut" type="Boolean" default="false"/>
+    <aura:attribute name="maxResults" type="Integer" default="8"/>
+    <aura:attribute name="results" type="Map" />
+    <aura:attribute name="msgReceived" type="String" />
+
+    <aura:attribute name="searchTerms" type="String" />
+
+    <!-- Handlers -->
+    <aura:handler name="init" value="{! this }" action="{! c.doInit }" />
+
+    <lightning:card title="Messages">
+        <lightning:layout verticalAlign="end" class="path-to-zip slds-m-around--small">
+            <lightning:layoutitem flexibility="grow" class="slds-p-right_medium">
+                <iframe  aura:id="vfFrame" src="{! v.giphyVFUrl }"/>
+            </lightning:layoutitem>
+            <lightning:layoutitem flexibility="grow" class="slds-p-right_medium">
+                <lightning:textarea label="Messages Received from VF to Lightning Component:" value="{!v.msgReceived}"/>
+            </lightning:layoutitem>
+        </lightning:layout>
+    </lightning:card>
+
+    <lightning:card iconName="utility:search" title="GIPHY Search Terms">
+
+        <lightning:layout verticalAlign="end" class="path-to-zip slds-m-around--small">
+            <lightning:layoutitem flexibility="grow" class="slds-p-right_medium">
+                                <span onkeypress="{!c.keyCheck}">
+                  <lightning:input aura:id="searchTerms" type="text" label="Search Terms" value="{!v.searchTerms}" />
+                </span>
+            </lightning:layoutitem>
+            <lightning:layoutitem flexibility="grow" class="slds-p-right_medium">
+                <lightning:input aura:id="maxRows" type="number" label="Max Results" value="{!v.maxResults}" onchange="{!c.maxResultsChange}"/>
+            </lightning:layoutitem>
+            <lightning:layoutitem class="slds-p-right_medium">
+                <lightning:button onclick="{!c.search}">Search</lightning:button>
+            </lightning:layoutitem>
+        </lightning:layout>
+
+    </lightning:card>
+
+    <lightning:card iconName="utility:photo" title="GIPHY Search Results">
+        <lightning:layout horizontalAlign="center" multipleRows="true">
+
+            <aura:iteration items="{!v.results}" var="result">
+                <lightning:layoutItem padding="around-small" size="8" smallDeviceSize="6" mediumDeviceSize="4" largeDeviceSize="3">
+
+                    <div class="gif-image">
+                        <a onclick="{!c.gifSelected}">
+                            <img id="{!'img' + result.id}" src="{!result.images.fixed_height.url}" data-index="{!result.id}"></img>
+                        </a>
+                    </div>
+
+                </lightning:layoutItem>
+            </aura:iteration>
+
+        </lightning:layout>
+    </lightning:card>
+</aura:component>
