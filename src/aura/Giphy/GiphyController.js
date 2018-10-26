@@ -4,13 +4,13 @@
         helper.getGiphyVFUrl(component);
         helper.getVfOrigin(component);
 
-        window.addEventListener('message', function(event) {
+        window.addEventListener('message', $A.getCallback(function(event) {
 
             var vfOrigin = component.get('v.vfOrigin');
             if (event.origin !== vfOrigin) { return; }
             helper.processMessageFromVF(component, event);
 
-        }, false);
+        }), false);
     },
     keyCheck: function (component, event, helper) {
 
