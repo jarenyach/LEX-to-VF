@@ -1,4 +1,4 @@
-<aura:component description="Giphy" implements="flexipage:availableForAllPageTypes,force:appHostable,force:hasRecordId" access="global" controller="GiphyController">
+<aura:component description="Giphy Test" implements="flexipage:availableForAllPageTypes,force:appHostable,force:hasRecordId" access="global" controller="GiphyController">
     <!-- Attributes -->
     <aura:attribute name="vfOrigin" type="String"/>
     <aura:attribute name="giphyVFUrl" type="String"/>
