@@ -6,7 +6,7 @@ global with sharing class GiphyController {
 
 
     public GiphyController() {
-
+        system.debug('1.1 update');
         isLightningOut = false;
         if (ApexPages.currentPage().getParameters().containsKey('isLightningOut')) {
             isLightningOut = ApexPages.currentPage().getParameters().get('isLightningOut') == 'true';
